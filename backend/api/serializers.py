@@ -1,8 +1,8 @@
 from django.db import transaction
+from recipes.models import Ingredient, Recipe, RecipeIngredient, Tag
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from users.serializers import Base64ImageField, CustomUserSerializer
-from recipes.models import Ingredient, RecipeIngredient, Recipe, Tag
 
 
 class IngredientSerializer(serializers.ModelSerializer):
