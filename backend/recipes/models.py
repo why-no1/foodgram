@@ -76,7 +76,7 @@ class Recipe(models.Model):
     )
     cooking_time = models.PositiveIntegerField(
         'Время приготовления',
-        validators=[MinValueValidator(1), MaxValueValidator(999),]
+        validators=[MinValueValidator(1), MaxValueValidator(999)]
     )
 
     class Meta:
@@ -103,7 +103,7 @@ class RecipeIngredient(models.Model):
     )
     amount = models.PositiveIntegerField(
         'Количество',
-        validators=[MinValueValidator(1), MaxValueValidator(999),]
+        validators=[MinValueValidator(1), MaxValueValidator(999)]
     )
 
     class Meta:
