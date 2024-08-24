@@ -1,20 +1,31 @@
 import csv
 import hashlib
-from django.http import HttpResponse
 
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
-from .permissions import AdminOrAuthorOrReadOnly
 from .filters import IngredientFilter, RecipeFilter
-from recipes.models import (Ingredient, Recipe, Tag, ShoppingCart, Favorite)
 from .pagination import CustomPagination
-from .serializers import (IngredientSerializer, CreateRecipeSerializer,
-                          RecipeGetSerializer, TagSerializer, ShoppingCartRecipeSerializer)
+from .permissions import AdminOrAuthorOrReadOnly
+from .serializers import (
+    CreateRecipeSerializer,
+    IngredientSerializer,
+    RecipeGetSerializer,
+    ShoppingCartRecipeSerializer,
+    TagSerializer
+)
+from recipes.models import (
+    Favorite,
+    Ingredient,
+    Recipe,
+    ShoppingCart,
+    Tag
+)
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
@@ -51,18 +62,21 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         serializer.save(author=self.request.user)
-    
+
     @action(
-            detail=True,
-            permission_classes=(IsAuthenticated,),
-            methods=('post', 'delete'),
-            url_path='shopping_cart'
+        detail=True,
+        permission_classes=(IsAuthenticated,),
+        methods=('post', 'delete'),
+        url_path='shopping_cart'
     )
     def shopping_cart(self, request, pk):
         recipe = get_object_or_404(Recipe, id=pk)
         author = self.request.user
         if request.method == 'POST':
-            shopping_cart_exists = ShoppingCart.objects.filter(recipe=recipe, author=author).exists()
+            shopping_cart_exists = ShoppingCart.objects.filter(
+                recipe=recipe,
+                author=author
+            ).exists()
             if not shopping_cart_exists:
                 ShoppingCart.objects.create(recipe=recipe, author=author)
             else:
@@ -77,16 +91,18 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
-            detail=False,
-            permission_classes=(IsAuthenticated,),
-            methods=['get'],
-            url_path='download-shopping-cart'
+        detail=False,
+        permission_classes=(IsAuthenticated,),
+        methods=['get'],
+        url_path='download-shopping-cart'
     )
     def download_shopping_cart(self, request):
         user = request.user
         shopping_cart_items = ShoppingCart.objects.filter(author=user)
         response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="shopping_cart.csv"'
+        response['Content-Disposition'] = (
+            'attachment; filename="shopping_cart.csv"'
+        )
         writer = csv.writer(response)
         writer.writerow(['Recipe', 'Ingredient'])
         for item in shopping_cart_items:
@@ -96,11 +112,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 writer.writerow([recipe.title, ingredient.name])
 
         return response
-    
+
     @action(
-            detail=True,
-            methods=['get'],
-            url_path='get-link'
+        detail=True,
+        methods=['get'],
+        url_path='get-link'
     )
     def get_link(self, request, pk=None):
         recipe = get_object_or_404(Recipe, pk=pk)
@@ -110,18 +126,20 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
         return Response({'short-link': short_link}, status=status.HTTP_200_OK)
 
-
     @action(
-            detail=True,
-            permission_classes=(IsAuthenticated,),
-            methods=('post', 'delete'),
-            url_path='favorite'
+        detail=True,
+        permission_classes=(IsAuthenticated,),
+        methods=('post', 'delete'),
+        url_path='favorite'
     )
     def facorite(self, request, pk):
         recipe = get_object_or_404(Recipe, id=pk)
         author = self.request.user
         if request.method == 'POST':
-            favorite_exists = Favorite.objects.filter(recipe=recipe, author=author).exists()
+            favorite_exists = Favorite.objects.filter(
+                recipe=recipe,
+                author=author
+            ).exists()
             if not favorite_exists:
                 Favorite.objects.create(recipe=recipe, author=author)
             else:
@@ -134,5 +152,3 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 return Response(status=status.HTTP_400_BAD_REQUEST)
             obj.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-
-

@@ -42,6 +42,7 @@ class Ingredient(models.Model):
     def __str__(self):
         return self.name
 
+
 class Recipe(models.Model):
 
     author = models.ForeignKey(
@@ -112,6 +113,7 @@ class RecipeIngredient(models.Model):
     def __str__(self):
         return f'{self.ingredient.name}'
 
+
 class ShoppingCart(models.Model):
 
     recipe = models.ForeignKey(
@@ -123,14 +125,16 @@ class ShoppingCart(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='shopping_cart',
+        related_name='shopping_cart'
     )
+
     class Meta:
         verbose_name = 'Cписок покупок'
         verbose_name_plural = 'Cписки покупок'
-    
+
     def __str__(self):
         return f'{self.recipe.name}'
+
 
 class Favorite(models.Model):
 
@@ -149,7 +153,6 @@ class Favorite(models.Model):
     class Meta:
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранные'
-    
+
     def __str__(self):
         return f'{self.recipe.name}'
-    

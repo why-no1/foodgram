@@ -29,6 +29,7 @@ class User(AbstractUser):
     def __str__(self):
         return self.username
 
+
 class Subscription(models.Model):
 
     user = models.ForeignKey(
@@ -47,7 +48,6 @@ class Subscription(models.Model):
     class Meta:
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
-
 
     def __str__(self):
         return f'{self.user}'
