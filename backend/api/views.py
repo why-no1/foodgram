@@ -66,12 +66,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def add_recipe(self, model, user, pk):
         recipe = get_object_or_404(Recipe, id=pk)
         if model.objects.filter(recipe=recipe, author=user).exists():
-                return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
         
         model.objects.create(recipe=recipe, author=user)
         serializer = ShoppingCartRecipeSerializer(recipe)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    
+
     def delete_recipe(self, model, user, pk):
         recipe = get_object_or_404(Recipe, id=pk)
         obj = model.objects.filter(recipe=recipe, author=user).first()
@@ -116,10 +116,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
         writer.writerow(['Ingredient', 'Amount'])
 
         for ingredient in ingredients:
-             writer.writerow(
-                [ingredient['ingredient__name'],
-                 ingredient['ingredient__measurement_unit'],
-                 ingredient['ingredients_amount']]
+            writer.writerow([
+                ingredient['ingredient__name'],
+                ingredient['ingredient__measurement_unit'],
+                ingredient['ingredients_amount']
+            ]
             )
 
         return response
@@ -133,7 +134,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
         recipe = get_object_or_404(Recipe, pk=pk)
 
         short_link_code = hashlib.md5(str(recipe.id).encode()).hexdigest()[:6]
-        short_link = request.build_absolute_uri(reverse('recipe-list')) + f'/s/{short_link_code}'
+        short_link = (
+            request.build_absolute_uri(reverse('recipe-list')) +
+            f'/s/{short_link_code}'
+        )
 
         return Response({'short-link': short_link}, status=status.HTTP_200_OK)
 

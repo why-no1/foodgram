@@ -147,7 +147,6 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
         ]
         RecipeIngredient.objects.bulk_create(recipe_ingredients)
 
-
     def create(self, validated_data):
         ingredients_data = validated_data.pop('ingredients', None)
         tags_data = validated_data.pop('tags', None)
@@ -155,7 +154,7 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(tags_data)
         self.add_recipe_ingredients(ingredients_data, recipe)
-        
+
         return recipe
 
     def update(self, instance, validated_data):
@@ -169,7 +168,6 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
         else:
             raise serializers.ValidationError('Добавьте ингредиенты.')
 
-        
         if tags:
             instance.tags.clear()
             instance.tags.set(tags)
