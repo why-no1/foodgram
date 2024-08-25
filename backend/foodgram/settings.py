@@ -9,9 +9,9 @@ load_dotenv()
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'key')
 
-DEBUG = os.getenv('DEBUG', 'False') == 'True'
+DEBUG = 'True'
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1 localhost').split()
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'taskiforit.hopto.org']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -79,10 +79,6 @@ else:
         }
     }
 
-
-# Password validation
-# https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -98,11 +94,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
-# Internationalization
-# https://docs.djangoproject.com/en/3.2/topics/i18n/
-
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru'
 
 TIME_ZONE = 'UTC'
 

@@ -53,15 +53,13 @@ class CustomUserViewSet(UserViewSet):
                     'avatar': avatar_url},
                     status=status.HTTP_200_OK
                 )
-            else:
-                return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
         if request.method == 'DELETE':
             user.avatar.delete()
             user.save()
             return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
     @action(
         detail=False,
@@ -108,7 +106,7 @@ class CustomUserViewSet(UserViewSet):
             )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        elif request.method == 'DELETE':
+        else:
             try:
                 subscription = Subscription.objects.get(
                     user=user,

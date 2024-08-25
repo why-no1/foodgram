@@ -1,21 +1,10 @@
-import base64
-
-from django.core.files.base import ContentFile
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
 
+from .utils import is_subscribed
 from .models import Subscription, User
 from recipes.models import Recipe
-
-
-class Base64ImageField(serializers.ImageField):
-
-    def to_internal_value(self, data):
-        if isinstance(data, str) and data.startswith('data:image'):
-            format, imgstr = data.split(';base64,')
-            ext = format.split('/')[-1]
-            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
-        return super().to_internal_value(data)
+from .fields import Base64ImageField
 
 
 class CustomUserSerializer(UserSerializer):
@@ -37,22 +26,9 @@ class CustomUserSerializer(UserSerializer):
             'is_subscribed',
         )
 
-    def update(self, instance, validated_data):
-        avatar_data = validated_data.pop('avatar', None)
-        if avatar_data:
-            format, imgstr = avatar_data.split(';base64,')
-            ext = format.split('/')[-1]
-            data = ContentFile(base64.b64decode(imgstr), name=f'avatar.{ext}')
-            instance.avatar.save(f'avatar.{ext}', data, save=True)
-        return super().update(instance, validated_data)
-
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
-        if request is None or request.user.is_anonymous:
-            return False
-        return Subscription.objects.filter(
-            user=request.user, author=obj
-        ).exists()
+        return is_subscribed(request.user, obj)
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):
@@ -88,7 +64,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
             'recipes_count',
             'avatar',
         )
-        read_only_fields = ("email", "username", "first_name", "last_name")
+        read_only_fields = ('email', 'username', 'first_name', 'last_name')
 
     def validate(self, data):
         author = data.get('author')
@@ -101,16 +77,13 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
-        return Subscription.objects.filter(
-            author=obj,
-            user=request.user
-        ).exists()
+        return is_subscribed(request.user, obj)
 
     def get_recipes(self, obj):
         from api.serializers import ShoppingCartRecipeSerializer
 
-        request = self.context.get("request")
-        limit = request.GET.get("recipes_limit")
+        request = self.context.get('request')
+        limit = request.GET.get('recipes_limit')
         recipes = obj.recipes.all()
         if limit:
             recipes = recipes[: int(limit)]
