@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models.constraints import UniqueConstraint
 from django.core.validators import MaxValueValidator, MinValueValidator
 
 from users.models import User
@@ -87,7 +88,7 @@ class Recipe(models.Model):
         return self.name
 
 
-class RecipeIngredientAmount(models.Model):
+class RecipeIngredient(models.Model):
 
     recipe = models.ForeignKey(
         Recipe,
@@ -109,12 +110,18 @@ class RecipeIngredientAmount(models.Model):
     class Meta:
         verbose_name = 'Ингредиент рецепта'
         verbose_name_plural = 'Ингредиенты рецепта'
+        constraints = [
+            UniqueConstraint(
+                fields=('recipe', 'ingredient'),
+                name='unique_ingredient'
+            )
+        ]
 
     def __str__(self):
         return f'{self.ingredient.name}'
 
 
-class ShoppingCartRecipes(models.Model):
+class ShoppingCart(models.Model):
 
     recipe = models.ForeignKey(
         Recipe,
@@ -131,12 +138,15 @@ class ShoppingCartRecipes(models.Model):
     class Meta:
         verbose_name = 'Cписок покупок'
         verbose_name_plural = 'Cписки покупок'
+        constraints = [
+            UniqueConstraint(fields=('recipe'), name='unique_shoppingcart')
+        ]
 
     def __str__(self):
         return f'{self.recipe.name}'
 
 
-class FavoriteRecipes(models.Model):
+class Favorite(models.Model):
 
     author = models.ForeignKey(
         User,
@@ -153,6 +163,9 @@ class FavoriteRecipes(models.Model):
     class Meta:
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранные'
+        constraints = [
+            UniqueConstraint(fields=('recipe'), name='unique_favorite')
+        ]
 
     def __str__(self):
         return f'{self.recipe.name}'

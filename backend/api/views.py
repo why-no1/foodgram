@@ -27,11 +27,11 @@ from .serializers import (
     SubscriptionSerializer,
 )
 from recipes.models import (
-    FavoriteRecipes,
+    Favorite,
     Ingredient,
-    RecipeIngredientAmount,
+    RecipeIngredient,
     Recipe,
-    ShoppingCartRecipes,
+    ShoppingCart,
     Tag
 )
 from users.models import User, SubscriptionAuthor
@@ -56,14 +56,6 @@ class CustomUserViewSet(UserViewSet):
     )
     def update_avatar(self, request, *args, **kwargs):
         user = request.user
-
-        # Почему то когда я оставляю здесь только удаление аватара,
-        # а изменение в сериализаторе,
-        # то у меня не проходят тесты на put запрос,
-        # поэтому я решил оставить во view изменения аватара
-        # + как то легче здесь определить метод delete.
-        # Если изменения аватра принцепиально важно оставить в сериализаторе,
-        # то я переделаю.
 
         if request.method == 'PUT':
             if 'avatar' in request.data:
@@ -208,9 +200,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def shopping_cart(self, request, pk):
         author = self.request.user
         if request.method == 'POST':
-            return self.add_recipe(ShoppingCartRecipes, author, pk)
+            return self.add_recipe(ShoppingCart, author, pk)
 
-        return self.delete_recipe(ShoppingCartRecipes, author, pk)
+        return self.delete_recipe(ShoppingCart, author, pk)
 
     @action(
         detail=False,
@@ -221,7 +213,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def download_shopping_cart(self, request):
         user = request.user
 
-        ingredients = RecipeIngredientAmount.objects.filter(
+        ingredients = RecipeIngredient.objects.filter(
             recipe__shoppingcart__author=user
         ).values('ingredient__name', 'ingredient__measurement_unit').annotate(
             ingredients_amount=Sum('amount')
@@ -269,6 +261,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def favorite(self, request, pk):
         author = self.request.user
         if request.method == 'POST':
-            return self.add_recipe(FavoriteRecipes, author, pk)
+            return self.add_recipe(Favorite, author, pk)
 
-        return self.delete_recipe(FavoriteRecipes, author, pk)
+        return self.delete_recipe(Favorite, author, pk)

@@ -1,4 +1,5 @@
 from django.contrib.auth.models import AbstractUser
+from django.db.models.constraints import UniqueConstraint
 from django.db import models
 
 
@@ -48,6 +49,9 @@ class SubscriptionAuthor(models.Model):
     class Meta:
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
+        constraints = [
+            UniqueConstraint(fields=('recipe'), name='unique_subscription')
+        ]
 
     def __str__(self):
         return f'{self.user}'

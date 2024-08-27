@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from djoser.serializers import UserCreateSerializer, UserSerializer
 
-from recipes.models import Ingredient, RecipeIngredientAmount, Recipe, Tag
+from recipes.models import Ingredient, RecipeIngredient, Recipe, Tag
 from users.models import User
 from .utils import is_subscribed
 from .fields import Base64ImageField
@@ -119,7 +119,7 @@ class RecipeIngredientsSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = RecipeIngredientAmount
+        model = RecipeIngredient
         fields = ('id', 'name', 'measurement_unit', 'amount')
 
 
@@ -230,14 +230,14 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
 
     def add_recipe_ingredients(self, ingredients, recipe):
         recipe_ingredients = [
-            RecipeIngredientAmount(
+            RecipeIngredient(
                 recipe=recipe,
                 ingredient_id=ingredient['id'],
                 amount=ingredient['amount']
             )
             for ingredient in ingredients
         ]
-        RecipeIngredientAmount.objects.bulk_create(recipe_ingredients)
+        RecipeIngredient.objects.bulk_create(recipe_ingredients)
 
     def create(self, validated_data):
         ingredients_data = validated_data.pop('ingredients')
@@ -255,21 +255,11 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
 
         instance = super().update(instance, validated_data)
 
-        # Если человек не укажет ни одного ингредиента,
-        # то будет выдавать ошибку 500.
-        # Поэтому нельзя убирать эту проверку.
-        # C тегами тоже самое.
-        if ingredients_data:
-            instance.ingredients.clear()
-            self.add_recipe_ingredients(ingredients_data, instance)
-        else:
-            raise serializers.ValidationError('Добавьте ингредиенты.')
+        instance.ingredients.clear()
+        self.add_recipe_ingredients(ingredients_data, instance)
 
-        if tags:
-            instance.tags.clear()
-            instance.tags.set(tags)
-        else:
-            raise serializers.ValidationError('Добавьте теги.')
+        instance.tags.clear()
+        instance.tags.set(tags)
 
         return instance
 
