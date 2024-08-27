@@ -30,7 +30,7 @@ class User(AbstractUser):
         return self.username
 
 
-class Subscription(models.Model):
+class SubscriptionAuthor(models.Model):
 
     user = models.ForeignKey(
         User,

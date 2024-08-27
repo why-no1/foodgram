@@ -87,7 +87,7 @@ class Recipe(models.Model):
         return self.name
 
 
-class RecipeIngredient(models.Model):
+class RecipeIngredientAmount(models.Model):
 
     recipe = models.ForeignKey(
         Recipe,
@@ -114,7 +114,7 @@ class RecipeIngredient(models.Model):
         return f'{self.ingredient.name}'
 
 
-class ShoppingCart(models.Model):
+class ShoppingCartRecipes(models.Model):
 
     recipe = models.ForeignKey(
         Recipe,
@@ -136,7 +136,7 @@ class ShoppingCart(models.Model):
         return f'{self.recipe.name}'
 
 
-class Favorite(models.Model):
+class FavoriteRecipes(models.Model):
 
     author = models.ForeignKey(
         User,

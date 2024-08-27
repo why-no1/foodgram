@@ -1,6 +1,8 @@
+import base64
 import csv
 import hashlib
 
+from django.core.files.base import ContentFile
 from django.urls import reverse
 from django.db.models import Sum
 from django.http import HttpResponse
@@ -10,6 +12,7 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from djoser.views import UserViewSet
 
 from .filters import IngredientFilter, RecipeFilter
 from .pagination import CustomPagination
@@ -19,16 +22,132 @@ from .serializers import (
     IngredientSerializer,
     RecipeGetSerializer,
     ShoppingCartRecipeSerializer,
-    TagSerializer
+    TagSerializer,
+    CustomUserSerializer,
+    SubscriptionSerializer,
 )
 from recipes.models import (
-    Favorite,
+    FavoriteRecipes,
     Ingredient,
-    RecipeIngredient,
+    RecipeIngredientAmount,
     Recipe,
-    ShoppingCart,
+    ShoppingCartRecipes,
     Tag
 )
+from users.models import User, SubscriptionAuthor
+
+
+class CustomUserViewSet(UserViewSet):
+
+    queryset = User.objects.all()
+    serializer_class = CustomUserSerializer
+    pagination_class = CustomPagination
+
+    def get_permissions(self):
+        if self.action == 'me':
+            return IsAuthenticated(),
+        return super().get_permissions()
+
+    @action(
+        detail=False,
+        methods=['put', 'delete'],
+        permission_classes=[IsAuthenticated],
+        url_path='me/avatar'
+    )
+    def update_avatar(self, request, *args, **kwargs):
+        user = request.user
+
+        # Почему то когда я оставляю здесь только удаление аватара,
+        # а изменение в сериализаторе,
+        # то у меня не проходят тесты на put запрос,
+        # поэтому я решил оставить во view изменения аватара
+        # + как то легче здесь определить метод delete.
+        # Если изменения аватра принцепиально важно оставить в сериализаторе,
+        # то я переделаю.
+
+        if request.method == 'PUT':
+            if 'avatar' in request.data:
+                file = request.data['avatar']
+                format, imgstr = file.split(';base64,')
+                ext = format.split('/')[-1]
+                user.avatar = ContentFile(
+                    base64.b64decode(imgstr),
+                    name='temp.' + ext
+                )
+                user.save()
+                avatar_url = (
+                    request.build_absolute_uri(user.avatar.url)
+                    if user.avatar else None
+                )
+                return Response({
+                    'avatar': avatar_url},
+                    status=status.HTTP_200_OK
+                )
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        if request.method == 'DELETE':
+            user.avatar.delete()
+            user.save()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    @action(
+        detail=False,
+        methods=['get'],
+        permission_classes=[IsAuthenticated],
+        url_path='subscriptions'
+    )
+    def subscriptions(self, request):
+        user = request.user
+        subscribed_users = user.subscriptions.all()
+        users = User.objects.filter(
+            id__in=subscribed_users.values_list('author', flat=True)
+        )
+        page = self.paginate_queryset(users)
+        serializer = SubscriptionSerializer(
+            page,
+            many=True,
+            context={'request': request}
+        )
+        return self.get_paginated_response(serializer.data)
+
+    @action(
+        detail=True,
+        methods=['post', 'delete'],
+        permission_classes=[IsAuthenticated],
+        url_path='subscribe'
+    )
+    def subscribe(self, request, id=None):
+        author = self.get_object()
+        user = request.user
+
+        if request.method == 'POST':
+            if author == user:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+            if SubscriptionAuthor.objects.filter(
+                user=user,
+                author=author
+            ).exists():
+                return Response(
+                    {'detail': 'Вы уже подписаны на этого пользователя.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            SubscriptionAuthor.objects.create(user=user, author=author)
+            serializer = SubscriptionSerializer(
+                author,
+                context={'request': request}
+            )
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        try:
+            subscription = SubscriptionAuthor.objects.get(
+                user=user,
+                author=author
+            )
+            subscription.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except SubscriptionAuthor.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
@@ -89,9 +208,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def shopping_cart(self, request, pk):
         author = self.request.user
         if request.method == 'POST':
-            return self.add_recipe(ShoppingCart, author, pk)
+            return self.add_recipe(ShoppingCartRecipes, author, pk)
 
-        return self.delete_recipe(ShoppingCart, author, pk)
+        return self.delete_recipe(ShoppingCartRecipes, author, pk)
 
     @action(
         detail=False,
@@ -102,7 +221,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def download_shopping_cart(self, request):
         user = request.user
 
-        ingredients = RecipeIngredient.objects.filter(
+        ingredients = RecipeIngredientAmount.objects.filter(
             recipe__shoppingcart__author=user
         ).values('ingredient__name', 'ingredient__measurement_unit').annotate(
             ingredients_amount=Sum('amount')
@@ -150,6 +269,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def favorite(self, request, pk):
         author = self.request.user
         if request.method == 'POST':
-            return self.add_recipe(Favorite, author, pk)
+            return self.add_recipe(FavoriteRecipes, author, pk)
 
-        return self.delete_recipe(Favorite, author, pk)
+        return self.delete_recipe(FavoriteRecipes, author, pk)
