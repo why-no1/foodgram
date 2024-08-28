@@ -58,7 +58,7 @@ class CustomUserViewSet(UserViewSet):
 
         if request.method == 'PUT':
             serializer.update_avatar(user, request.data)
-            avatar_url = request.build_absolute_uri(user.avatar.url) if user.avatar else None
+            avatar_url = request.build_absolute_uri(user.avatar.url)
             return Response({'avatar': avatar_url}, status=status.HTTP_200_OK)
 
         if request.method == 'DELETE':
