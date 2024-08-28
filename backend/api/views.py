@@ -48,6 +48,27 @@ class CustomUserViewSet(UserViewSet):
 
     @action(
         detail=False,
+        methods=['put', 'delete'],
+        permission_classes=[IsAuthenticated],
+        url_path='me/avatar'
+    )
+    def update_avatar(self, request, *args, **kwargs):
+        user = request.user
+        serializer = self.get_serializer(user)
+
+        if request.method == 'PUT':
+            serializer.update_avatar(user, request.data)
+            avatar_url = request.build_absolute_uri(user.avatar.url) if user.avatar else None
+            return Response({'avatar': avatar_url}, status=status.HTTP_200_OK)
+
+        if request.method == 'DELETE':
+            serializer.delete_avatar()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    @action(
+        detail=False,
         methods=['get'],
         permission_classes=[IsAuthenticated],
         url_path='subscriptions'
