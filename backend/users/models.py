@@ -31,7 +31,7 @@ class User(AbstractUser):
         return self.username
 
 
-class SubscriptionAuthor(models.Model):
+class Subscription(models.Model):
 
     user = models.ForeignKey(
         User,
@@ -50,7 +50,10 @@ class SubscriptionAuthor(models.Model):
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
         constraints = [
-            UniqueConstraint(fields=('recipe'), name='unique_subscription')
+            UniqueConstraint(
+                fields=('user', 'author'),
+                name='unique_subscription'
+            )
         ]
 
     def __str__(self):

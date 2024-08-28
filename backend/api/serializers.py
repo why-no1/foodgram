@@ -1,5 +1,8 @@
+import base64
+
 from rest_framework import serializers
 from djoser.serializers import UserCreateSerializer, UserSerializer
+from django.core.files.base import ContentFile
 
 from recipes.models import Ingredient, RecipeIngredient, Recipe, Tag
 from users.models import User
@@ -25,6 +28,22 @@ class CustomUserSerializer(UserSerializer):
             'avatar',
             'is_subscribed',
         )
+
+    def update_avatar(self, instance, validated_data):
+
+        avatar_data = validated_data.pop('avatar', None)
+        if avatar_data:
+            format, imgstr = avatar_data.split(';base64,')
+            ext = format.split('/')[-1]
+            data = ContentFile(base64.b64decode(imgstr), name=f'avatar.{ext}')
+            instance.avatar.save(f'avatar.{ext}', data, save=True)
+
+        return super().update(instance, validated_data)
+
+    def delete_avatar(self):
+        user = self.instance
+        user.avatar.delete()
+        user.save()
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')

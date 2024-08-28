@@ -1,8 +1,6 @@
-import base64
 import csv
 import hashlib
 
-from django.core.files.base import ContentFile
 from django.urls import reverse
 from django.db.models import Sum
 from django.http import HttpResponse
@@ -34,7 +32,7 @@ from recipes.models import (
     ShoppingCart,
     Tag
 )
-from users.models import User, SubscriptionAuthor
+from users.models import User, Subscription
 
 
 class CustomUserViewSet(UserViewSet):
@@ -47,41 +45,6 @@ class CustomUserViewSet(UserViewSet):
         if self.action == 'me':
             return IsAuthenticated(),
         return super().get_permissions()
-
-    @action(
-        detail=False,
-        methods=['put', 'delete'],
-        permission_classes=[IsAuthenticated],
-        url_path='me/avatar'
-    )
-    def update_avatar(self, request, *args, **kwargs):
-        user = request.user
-
-        if request.method == 'PUT':
-            if 'avatar' in request.data:
-                file = request.data['avatar']
-                format, imgstr = file.split(';base64,')
-                ext = format.split('/')[-1]
-                user.avatar = ContentFile(
-                    base64.b64decode(imgstr),
-                    name='temp.' + ext
-                )
-                user.save()
-                avatar_url = (
-                    request.build_absolute_uri(user.avatar.url)
-                    if user.avatar else None
-                )
-                return Response({
-                    'avatar': avatar_url},
-                    status=status.HTTP_200_OK
-                )
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        if request.method == 'DELETE':
-            user.avatar.delete()
-            user.save()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
 
     @action(
         detail=False,
@@ -116,7 +79,7 @@ class CustomUserViewSet(UserViewSet):
         if request.method == 'POST':
             if author == user:
                 return Response(status=status.HTTP_400_BAD_REQUEST)
-            if SubscriptionAuthor.objects.filter(
+            if Subscription.objects.filter(
                 user=user,
                 author=author
             ).exists():
@@ -124,7 +87,7 @@ class CustomUserViewSet(UserViewSet):
                     {'detail': 'Вы уже подписаны на этого пользователя.'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            SubscriptionAuthor.objects.create(user=user, author=author)
+            Subscription.objects.create(user=user, author=author)
             serializer = SubscriptionSerializer(
                 author,
                 context={'request': request}
@@ -132,13 +95,13 @@ class CustomUserViewSet(UserViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         try:
-            subscription = SubscriptionAuthor.objects.get(
+            subscription = Subscription.objects.get(
                 user=user,
                 author=author
             )
             subscription.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-        except SubscriptionAuthor.DoesNotExist:
+        except Subscription.DoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
