@@ -29,7 +29,7 @@ class CustomUserSerializer(UserSerializer):
             'is_subscribed',
         )
 
-    def update_avatar(self, instance, validated_data):
+    def update(self, instance, validated_data):
 
         avatar_data = validated_data.pop('avatar', None)
         if avatar_data:
