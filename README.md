@@ -4,26 +4,8 @@ Foodgram — социальная сеть для обмена любимыми 
 
 Вот тут можно зайти на сайт - https://taskiforit.hopto.org/recipes
 
-## у меня почему то при деплои проекта на сервер вылезает ошибка 
-Forbidden (403)
-CSRF verification failed. Request aborted. 
-при заходе в админку. Именно поэтому я не могу добавить в базу данных рецепты.
-
-вот мой файл .env:
-POSTGRES_USER=django_user
-POSTGRES_PASSWORD=mysecreatpassword
-POSTGRES_DB=django
-DB_HOST=db
-DB_PORT=5432
-
-DEBUG=False
-
-ALLOWED_HOSTS=taskiforit.hopto.org
-
-SECRET_KEY=django-insecure-cg6*%6d51ef8f#4!r3*$vmxm4)abgjw8mo!4y-q*uq1!4$-89$
 
 **_Контейнеры и CI/CD для Foodgram._**
-
 
 ## Установка 
 
