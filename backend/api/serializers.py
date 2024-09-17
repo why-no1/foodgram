@@ -121,10 +121,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         return serializer.data
 
     def get_recipes_count(self, obj):
-        return ShoppingCart.objects.filter(
-            user=self.context['request'].user,
-            recipe__author=obj
-        ).count()
+        return obj.recipes.count()
 
 
 class TagSerializer(serializers.ModelSerializer):
