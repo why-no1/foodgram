@@ -8,7 +8,8 @@ from recipes.models import (
     Ingredient,
     RecipeIngredient,
     Recipe,
-    Tag
+    Tag,
+    ShoppingCart
 )
 from users.models import User
 from .utils import is_subscribed
@@ -120,7 +121,8 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         return serializer.data
 
     def get_recipes_count(self, obj):
-        return obj.recipes.count()
+        return ShoppingCart.objects.filter(
+            user=self.context['request'].user).count()
 
 
 class TagSerializer(serializers.ModelSerializer):
