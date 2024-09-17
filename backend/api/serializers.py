@@ -8,8 +8,7 @@ from recipes.models import (
     Ingredient,
     RecipeIngredient,
     Recipe,
-    Tag,
-    ShoppingCart
+    Tag
 )
 from users.models import User
 from .utils import is_subscribed
