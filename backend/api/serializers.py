@@ -4,7 +4,13 @@ from rest_framework import serializers
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from django.core.files.base import ContentFile
 
-from recipes.models import Ingredient, RecipeIngredient, Recipe, Tag, ShoppingCart
+from recipes.models import (
+    Ingredient,
+    RecipeIngredient,
+    Recipe,
+    Tag,
+    ShoppingCart
+)
 from users.models import User
 from .utils import is_subscribed
 from .fields import Base64ImageField
@@ -115,7 +121,10 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         return serializer.data
 
     def get_recipes_count(self, obj):
-        return ShoppingCart.objects.filter(user=self.context['request'].user, recipe__author=obj).count()
+        return ShoppingCart.objects.filter(
+            user=self.context['request'].user,
+            recipe__author=obj
+        ).count()
 
 
 class TagSerializer(serializers.ModelSerializer):
