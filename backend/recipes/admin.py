@@ -5,10 +5,12 @@ from .models import (
     Ingredient,
     Recipe,
     ShoppingCart,
-    Tag
+    Tag,
 )
+from users.models import User
 
 
+admin.site.register(User)
 admin.site.register(Recipe)
 admin.site.register(Ingredient)
 admin.site.register(Tag)

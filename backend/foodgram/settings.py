@@ -106,7 +106,7 @@ USE_TZ = True
 
 AUTH_USER_MODEL = 'users.User'
 
-CSRF_TRUSTED_ORIGINS = ['https://taskiforit.hopto.org']
+CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED')
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'collected_static'

@@ -9,7 +9,8 @@ from recipes.models import (
     RecipeIngredient,
     Recipe,
     Tag,
-    ShoppingCart
+    ShoppingCart,
+    Favorite
 )
 from users.models import User
 from .utils import is_subscribed
@@ -121,8 +122,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         return serializer.data
 
     def get_recipes_count(self, obj):
-        return ShoppingCart.objects.filter(
-            user=self.context['request'].user).count()
+        return obj.recipes.count()
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -174,13 +174,16 @@ class RecipeGetSerializer(serializers.ModelSerializer):
     def get_is_favorited(self, obj):
         user = self.context['request'].user
         if user.is_authenticated:
-            return user.favorite.filter(recipe=obj).exists()
+            return Favorite.objects.filter(author=user, recipe=obj).exists()
         return False
 
     def get_is_in_shopping_cart(self, obj):
         user = self.context['request'].user
         if user.is_authenticated:
-            return user.shopping_cart.filter(recipe=obj).exists()
+            return ShoppingCart.objects.filter(
+                author=user,
+                recipe=obj
+            ).exists()
         return False
 
 

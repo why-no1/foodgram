@@ -148,7 +148,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     permission_classes = (AdminOrAuthorOrReadOnly,)
 
     def get_serializer_class(self):
-        if self.request.method in 'GET':
+        if self.request.method == 'GET':
             return RecipeGetSerializer
         return CreateRecipeSerializer
 
@@ -189,13 +189,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
         detail=False,
         permission_classes=(IsAuthenticated,),
         methods=['get'],
-        url_path='download-shopping-cart'
+        url_path='download_shopping_cart'
     )
     def download_shopping_cart(self, request):
         user = request.user
 
         ingredients = RecipeIngredient.objects.filter(
-            recipe__shoppingcart__author=user
+            recipe__shopping_cart__author=user
         ).values('ingredient__name', 'ingredient__measurement_unit').annotate(
             ingredients_amount=Sum('amount')
         )
@@ -227,7 +227,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
         short_link_code = hashlib.md5(str(recipe.id).encode()).hexdigest()[:6]
         short_link = (
-            request.build_absolute_uri(reverse('recipe-list'))
+            request.build_absolute_uri(reverse('api:recipes-list'))
             + f'/s/{short_link_code}'
         )
 
