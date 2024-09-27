@@ -4,7 +4,7 @@ import hashlib
 from django.urls import reverse
 from django.db.models import Sum
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -226,9 +226,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
         recipe = get_object_or_404(Recipe, pk=pk)
 
         short_link_code = hashlib.md5(str(recipe.id).encode()).hexdigest()[:6]
-        short_link = (
-            request.build_absolute_uri(reverse('api:recipes-list'))
-            + f'/s/{short_link_code}'
+        short_link = request.build_absolute_uri(
+            reverse('short_link', kwargs={'pk': short_link_code})
         )
 
         return Response({'short-link': short_link}, status=status.HTTP_200_OK)
@@ -245,3 +244,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return self.add_recipe(Favorite, author, pk)
 
         return self.delete_recipe(Favorite, author, pk)
+
+
+def short_link(request, pk):
+    recipes = Recipe.objects.all()
+
+    for recipe in recipes:
+        id_recipe = hashlib.md5(str(recipe.id).encode()).hexdigest()[:6]
+        if id_recipe == pk:
+            return redirect(f'/recipes/{recipe.id}/')
+
+    return print(f'Не существует {recipe.id}')
